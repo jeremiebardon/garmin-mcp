@@ -51,6 +51,14 @@ describe('MCP registry (integration)', () => {
     expect((await client.listTools()).tools).toEqual([]);
   });
 
+  it('sends the server instructions', async () => {
+    await connect([]);
+    const instructions = client.getInstructions();
+    expect(instructions?.split('\n')).toHaveLength(5);
+    expect(instructions).toContain('Never declare a Race');
+    expect(instructions).toContain('freshness.stale');
+  });
+
   it('lists the discovered tool with its schemas and annotations', async () => {
     await connect([EchoSource, EchoTool]);
     const { tools } = await client.listTools();
