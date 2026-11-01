@@ -7,6 +7,7 @@ This repository holds code, docs and synthetic test fixtures only. The Athlete's
 | What | Where it lives | Why it stays out |
 |---|---|---|
 | Garmin Personal API key | `.env` (local only) | A credential for the Athlete's Garmin account |
+| `DATABASE_URL` | The environment or `.env` (local only); never logged | A database credential for the Postgres store |
 | Real Garmin samples (JSON, FIT ZIPs, `expected.json`) | `.garmin-samples/` (local only) | FIT Files hold full GPS tracks and 1 Hz heart rate |
 | Synced Garmin data (raw JSON, FIT ZIPs, Derived Metrics) | The Postgres volume of the Docker Compose stack | Personal training and Wellness Data |
 | Running Books (PDFs) | `./books` (local only) | Copyrighted material |
