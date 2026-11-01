@@ -50,6 +50,7 @@ src/
 - Fresh checkout: `npm ci`. Tests need no `.env` and no real Garmin data: fixtures are synthetic (ADR 0002).
 - Server: `PORT=<port> npm run start` (3000 by default); `npm run start:dev` watches. It binds to `HOST` (`127.0.0.1` by default). Health: `GET /health/live` (always 200) and `GET /health/ready` (200, or 503 while the readiness gate says not ready).
 - Validation, the same as `factory/checks.sh` and the `ci` workflow: `gitleaks git --redact .`, `npm run check:paths`, `npm run check` (lint, typecheck, unit + integration + e2e tests) and `npm run build`.
+- MCP contract: `test/integration/__snapshots__/mcp-contract.json` is the snapshot of every registered tool. `npm run check` and CI fail instead of writing it; update it on purpose with `npx vitest run --project integration -u test/integration/mcp-contract.int-spec.ts`, then review and commit the diff.
 
 ## Agent skills
 
