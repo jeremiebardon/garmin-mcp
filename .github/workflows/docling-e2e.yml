@@ -1,0 +1,71 @@
+# Docling end-to-end test (JER-14, JER-16): the committed fixture PDF through
+# the real sidecar image. Kept out of `ci` because of the image size and CPU
+# time. Until `docling-sidecar/` exists (JER-15, JER-13) every step after the
+# guard is skipped, so the workflow is a no-op.
+name: docling-e2e
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docling-sidecar/**'
+      - 'src/modules/knowledge-base/ingest/**'
+      - '.github/workflows/docling-e2e.yml'
+  pull_request:
+    paths:
+      - 'docling-sidecar/**'
+      - 'src/modules/knowledge-base/ingest/**'
+      - '.github/workflows/docling-e2e.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docling-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  docling-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check for the sidecar
+        id: sidecar
+        run: |
+          if [ -f docling-sidecar/Dockerfile ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::docling-sidecar/Dockerfile does not exist yet; skipping the Docling E2E test."
+          fi
+
+      - if: steps.sidecar.outputs.present == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - if: steps.sidecar.outputs.present == 'true'
+        run: npm ci
+
+      - if: steps.sidecar.outputs.present == 'true'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - if: steps.sidecar.outputs.present == 'true'
+        name: Build the sidecar image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: docling-sidecar
+          tags: garmin-mcp/docling-sidecar:ci
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - if: steps.sidecar.outputs.present == 'true'
+        run: npm run test:docling

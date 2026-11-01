@@ -1,0 +1,475 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Garmin Connect Personal API",
+    "version": "1.0.0",
+    "description": "Read-only OpenAPI specification for the Garmin Connect Personal API. Exchange your Personal API Key at `/personalapitoken-service/personal-api/personal-api-key/token` to obtain a 24-hour OAuth2 Bearer JWT token for all data endpoints."
+  },
+  "servers": [
+    {
+      "url": "https://personal.connectapi.garmin.com",
+      "description": "Garmin Connect Personal API Production Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "PersonalApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Format: `ApiKey <your-personal-api-key>` (Used exclusively to obtain a Bearer token)"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "24-hour access token returned by the Obtain Token endpoint."
+      }
+    },
+    "parameters": {
+      "calendarDatePath": {
+        "name": "calendarDate",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "date", "example": "2026-10-31" },
+        "description": "Calendar date in YYYY-MM-DD format."
+      },
+      "startDatePath": {
+        "name": "startDate",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "date", "example": "2026-10-01" },
+        "description": "Range start date in YYYY-MM-DD format."
+      },
+      "endDatePath": {
+        "name": "endDate",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "date", "example": "2026-10-31" },
+        "description": "Range end date in YYYY-MM-DD format."
+      },
+      "startDateQuery": {
+        "name": "startDate",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "string", "format": "date", "example": "2026-10-01" },
+        "description": "Start date in YYYY-MM-DD format."
+      },
+      "endDateQuery": {
+        "name": "endDate",
+        "in": "query",
+        "required": true,
+        "schema": { "type": "string", "format": "date", "example": "2026-10-31" },
+        "description": "End date in YYYY-MM-DD format."
+      },
+      "activityIdPath": {
+        "name": "activityId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "integer", "format": "int64", "example": 12345678901 },
+        "description": "Unique Garmin Connect activity ID."
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "paths": {
+    "/personalapitoken-service/personal-api/personal-api-key/token": {
+      "post": {
+        "tags": ["Authentication"],
+        "operationId": "obtainToken",
+        "summary": "Exchange Personal API Key for a 24h Bearer access token",
+        "security": [{ "PersonalApiKey": [] }],
+        "responses": {
+          "200": {
+            "description": "JWT Bearer access token valid for 24 hours",
+            "content": {
+              "text/plain": {
+                "schema": { "type": "string" }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid, expired, or revoked Personal API Key" }
+        }
+      }
+    },
+    "/userprofile-service/userprofile/settings": {
+      "get": {
+        "tags": ["User Profile & Biometrics"],
+        "operationId": "getUserProfileSettings",
+        "summary": "Get user profile settings and measurement preferences",
+        "responses": {
+          "200": { "description": "User profile settings JSON" }
+        }
+      }
+    },
+    "/biometric-service/heartRateZones/v2": {
+      "get": {
+        "tags": ["User Profile & Biometrics"],
+        "operationId": "getHeartRateZones",
+        "summary": "Get configured heart rate zones (default and sport-specific)",
+        "responses": {
+          "200": { "description": "Heart rate zones configuration" }
+        }
+      }
+    },
+    "/fitnessage-service/fitnessage/v2/{calendarDate}": {
+      "get": {
+        "tags": ["User Profile & Biometrics"],
+        "operationId": "getFitnessAge",
+        "summary": "Get fitness age metrics for a specific date",
+        "parameters": [{ "$ref": "#/components/parameters/calendarDatePath" }],
+        "responses": {
+          "200": { "description": "Fitness age breakdown" }
+        }
+      }
+    },
+    "/activitylist-service/activities/search/activities": {
+      "get": {
+        "tags": ["Activities"],
+        "operationId": "searchActivities",
+        "summary": "Search and paginate recorded activities",
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 0, "minimum": 0 },
+            "description": "Pagination offset"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 20, "minimum": 1, "maximum": 100 },
+            "description": "Maximum number of activities to return"
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "activityType",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "example": "running" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Array of activity summary objects" }
+        }
+      }
+    },
+    "/activity-service/activity/{activityId}": {
+      "get": {
+        "tags": ["Activities"],
+        "operationId": "getActivity",
+        "summary": "Get detailed activity summary, metadata, and segments",
+        "parameters": [{ "$ref": "#/components/parameters/activityIdPath" }],
+        "responses": {
+          "200": { "description": "Detailed activity object" }
+        }
+      }
+    },
+    "/activity-service/activity/{activityId}/workouts": {
+      "get": {
+        "tags": ["Activities"],
+        "operationId": "getActivityWorkouts",
+        "summary": "Get structured workout details associated with an activity",
+        "parameters": [{ "$ref": "#/components/parameters/activityIdPath" }],
+        "responses": {
+          "200": { "description": "Associated workout structure" }
+        }
+      }
+    },
+    "/download-service/files/activity/{activityId}": {
+      "get": {
+        "tags": ["Activities"],
+        "operationId": "downloadActivityFitZip",
+        "summary": "Download original activity .FIT file (packaged as a ZIP archive)",
+        "parameters": [{ "$ref": "#/components/parameters/activityIdPath" }],
+        "responses": {
+          "200": {
+            "description": "Binary ZIP archive containing the original .FIT file",
+            "content": {
+              "application/zip": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wellnessactivity-service/activity/summary/range/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Activities"],
+        "operationId": "getWellnessActivitySummaries",
+        "summary": "Get wellness activity summaries over a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" }
+        ],
+        "responses": {
+          "200": { "description": "Wellness activity summaries" }
+        }
+      }
+    },
+    "/hrv-service/hrv/{calendarDate}": {
+      "get": {
+        "tags": ["Heart Rate & HRV"],
+        "operationId": "getDailyHrv",
+        "summary": "Get overnight Heart Rate Variability (HRV) detail for a single date",
+        "parameters": [{ "$ref": "#/components/parameters/calendarDatePath" }],
+        "responses": {
+          "200": { "description": "Single-day overnight HRV readings and status" }
+        }
+      }
+    },
+    "/hrv-service/hrv/daily/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Heart Rate & HRV"],
+        "operationId": "getDailyHrvSummaries",
+        "summary": "Get daily HRV summaries, baseline range, and weekly averages for a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" }
+        ],
+        "responses": {
+          "200": { "description": "List of daily HRV summary objects" }
+        }
+      }
+    },
+    "/wellness-service/wellness/dailyHeartRate": {
+      "get": {
+        "tags": ["Heart Rate & HRV"],
+        "operationId": "getDailyHeartRate",
+        "summary": "Get intraday heart rate timeline and resting HR for a given date",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date", "example": "2026-10-31" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daily heart rate timeline and resting HR" }
+        }
+      }
+    },
+    "/sleep-service/sleep/dailySleep": {
+      "get": {
+        "tags": ["Sleep"],
+        "operationId": "getDailySleep",
+        "summary": "Get detailed sleep stages (deep, light, REM), sleep score, and intraday movement",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date", "example": "2026-10-31" },
+            "description": "Wake-up morning date in YYYY-MM-DD format"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Detailed daily sleep object" }
+        }
+      }
+    },
+    "/sleep-service/sleep/dailySleepSummariesByDate": {
+      "get": {
+        "tags": ["Sleep"],
+        "operationId": "getDailySleepSummaries",
+        "summary": "Get sleep summaries across a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDateQuery" },
+          { "$ref": "#/components/parameters/endDateQuery" }
+        ],
+        "responses": {
+          "200": { "description": "Array of daily sleep summaries" }
+        }
+      }
+    },
+    "/usersummary-service/v2/dailysummaries": {
+      "get": {
+        "tags": ["Daily Summaries & Wellness"],
+        "operationId": "getDailySummaries",
+        "summary": "Get comprehensive daily summaries (steps, calories, intensity minutes, RHR, stress, Body Battery)",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDateQuery" },
+          { "$ref": "#/components/parameters/endDateQuery" }
+        ],
+        "responses": {
+          "200": { "description": "Array of daily user summaries" }
+        }
+      }
+    },
+    "/usersummary-service/stats/steps/daily/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Daily Summaries & Wellness"],
+        "operationId": "getDailySteps",
+        "summary": "Get daily step totals and step goals for a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" }
+        ],
+        "responses": {
+          "200": { "description": "Daily step stats" }
+        }
+      }
+    },
+    "/usersummary-service/stats/stress/daily/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Daily Summaries & Wellness"],
+        "operationId": "getDailyStress",
+        "summary": "Get daily stress averages and durations for a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" }
+        ],
+        "responses": {
+          "200": { "description": "Daily stress stats" }
+        }
+      }
+    },
+    "/usersummary-service/stats/hydration/daily/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Daily Summaries & Wellness"],
+        "operationId": "getDailyHydration",
+        "summary": "Get daily hydration intake and goals for a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" }
+        ],
+        "responses": {
+          "200": { "description": "Daily hydration stats" }
+        }
+      }
+    },
+    "/wellness-service/wellness/bodyBattery/reports/daily": {
+      "get": {
+        "tags": ["Daily Summaries & Wellness"],
+        "operationId": "getDailyBodyBattery",
+        "summary": "Get daily Body Battery charge/drain reports and timelines",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDateQuery" },
+          { "$ref": "#/components/parameters/endDateQuery" },
+          {
+            "name": "chunks",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Daily Body Battery reports" }
+        }
+      }
+    },
+    "/wellness-service/wellness/daily/spo2acclimation/{calendarDate}": {
+      "get": {
+        "tags": ["Daily Summaries & Wellness"],
+        "operationId": "getDailySpo2",
+        "summary": "Get daily Pulse Ox (SpO2) and altitude acclimation data",
+        "parameters": [{ "$ref": "#/components/parameters/calendarDatePath" }],
+        "responses": {
+          "200": { "description": "Daily SpO2 acclimation data" }
+        }
+      }
+    },
+    "/weight-service/weight/range/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Weight & Nutrition"],
+        "operationId": "getWeightMeasurements",
+        "summary": "Get weight and body composition measurements over a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" },
+          {
+            "name": "includeAll",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": true }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Weight measurements" }
+        }
+      }
+    },
+    "/goal-service/goal/user/effective/weightgoal/{startDate}/{endDate}": {
+      "get": {
+        "tags": ["Weight & Nutrition"],
+        "operationId": "getEffectiveWeightGoals",
+        "summary": "Get active user weight goals for a date range",
+        "parameters": [
+          { "$ref": "#/components/parameters/startDatePath" },
+          { "$ref": "#/components/parameters/endDatePath" }
+        ],
+        "responses": {
+          "200": { "description": "Effective weight goals" }
+        }
+      }
+    },
+    "/nutrition-service/food/logs/{calendarDate}": {
+      "get": {
+        "tags": ["Weight & Nutrition"],
+        "operationId": "getDailyFoodLogs",
+        "summary": "Get logged nutrition and food entries for a calendar date",
+        "parameters": [{ "$ref": "#/components/parameters/calendarDatePath" }],
+        "responses": {
+          "200": { "description": "Daily food logs" }
+        }
+      }
+    },
+    "/periodichealth-service/menstrualcycle/summary/{calendarDate}": {
+      "get": {
+        "tags": ["Periodic Health"],
+        "operationId": "getMenstrualCycleSummary",
+        "summary": "Get menstrual cycle summary for a calendar date",
+        "parameters": [{ "$ref": "#/components/parameters/calendarDatePath" }],
+        "responses": {
+          "200": { "description": "Menstrual cycle summary" }
+        }
+      }
+    },
+    "/periodichealth-service/menstrualcycle/dayview/{calendarDate}": {
+      "get": {
+        "tags": ["Periodic Health"],
+        "operationId": "getMenstrualCycleDayView",
+        "summary": "Get menstrual cycle day view",
+        "parameters": [
+          { "$ref": "#/components/parameters/calendarDatePath" },
+          {
+            "name": "todayDate",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Menstrual cycle day view" }
+        }
+      }
+    }
+  }
+}
