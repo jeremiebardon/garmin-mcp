@@ -1,6 +1,6 @@
 # Issue tracker: Linear
 
-Issues and specs for this repo live in Linear. This repo has no git remote, so there is no GitHub/GitLab fallback.
+Issues and specs for this repo live in Linear. The GitHub remote (`jeremiebardon/garmin-mcp`) holds code, PRs and CI only; GitHub Issues are not used, so there is no GitHub fallback.
 
 ## Conventions
 

@@ -13,6 +13,17 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    # The stack is pinned to Node 24, TypeScript 6 and Vitest 4. Their majors
+    # are deliberate upgrades, not weekly bumps.
+    ignore:
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
+      - dependency-name: vitest
+        update-types: [version-update:semver-major]
+      - dependency-name: '@vitest/*'
+        update-types: [version-update:semver-major]
     groups:
       minor-and-patch:
         update-types: [minor, patch]
