@@ -73,7 +73,11 @@ books/
 *.zip
 
 # Windows junctions to .agents/skills/ made by the skills installer (committed once, in .agents/)
-.claude/skills/
+.claude/skills/*
+!.claude/skills/factory/
+
+# Software factory runtime state
+/factory/jobs/
 
 # Local spike output (e.g. the Docling spike; no book text is committed)
 spikes/

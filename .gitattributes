@@ -1,0 +1,3 @@
+# The factory's scripts run under Git Bash and a shebang; CRLF breaks both.
+factory/checks.sh text eol=lf
+factory/bin/* text eol=lf
