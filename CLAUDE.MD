@@ -9,18 +9,24 @@ src/
 │   └── phoenix-tracer.service.ts         # Helper for manual spans (e.g., RAG / DB / external APIs)
 ├── mcp/                                  # Core MCP Infrastructure Module
 │   ├── decorators/                       # Custom metadata decorators
-│   │   ├── mcp-tool.decorator.ts         # @McpTool({ name, description, schema })
+│   │   ├── mcp-tool.decorator.ts         # @McpTool({ name, description, inputSchema, outputSchema, annotations })
 │   │   ├── mcp-resource.decorator.ts     # @McpResource({ uri, name, mimeType })
 │   │   └── mcp-prompt.decorator.ts       # @McpPrompt({ name, description })
 │   ├── transports/                       # Transport adapters
-│   │   ├── stdio.transport.ts            # Local CLI / Stdio integration
-│   │   └── sse.controller.ts             # Remote HTTP + SSE / Streamable HTTP endpoints
+│   │   └── streamable-http.controller.ts # Stateless Streamable HTTP: POST /mcp (GET, DELETE answer 405)
+│   ├── mcp-origin.guard.ts               # Origin check on every /mcp request (loopback origins only, else 403)
 │   ├── services/
 │   │   ├── mcp-server.service.ts         # Wraps @modelcontextprotocol/sdk McpServer
 │   │   └── mcp-registry.service.ts       # Scans providers via DiscoveryService & binds handlers
 │   ├── interfaces/
 │   │   └── mcp-metadata.interface.ts     # TypeScript types for decorator metadata
 │   └── mcp.module.ts                     # Global or dynamic module (@Global())
+│
+├── health/                               # Readiness gate + health endpoints
+│   ├── readiness-gate.ts                 # READINESS_GATE token; default always ready
+│   ├── readiness.guard.ts                # 503 on /mcp while the gate is not ready (after the Origin check)
+│   ├── health.controller.ts              # GET /health/live, GET /health/ready
+│   └── health.module.ts
 │
 ├── modules/                              # Domain / Feature Modules
 │   ├── example/                          # Example Domain Module
@@ -37,13 +43,12 @@ src/
 │       └── ...
 │
 ├── app.module.ts
-├── main.ts                               # Standard HTTP / SSE bootstrap
-└── main-stdio.ts                         # Dedicated entrypoint for Stdio mode
+└── main.ts                               # The only entrypoint: HTTP bootstrap, MCP over Streamable HTTP at POST /mcp
 
 ## Commands
 
 - Fresh checkout: `npm ci`. Tests need no `.env` and no real Garmin data: fixtures are synthetic (ADR 0002).
-- Server: `PORT=<port> npm run start` (3000 by default); `npm run start:dev` watches.
+- Server: `PORT=<port> npm run start` (3000 by default); `npm run start:dev` watches. It binds to `HOST` (`127.0.0.1` by default). Health: `GET /health/live` (always 200) and `GET /health/ready` (200, or 503 while the readiness gate says not ready).
 - Validation, the same as `factory/checks.sh` and the `ci` workflow: `gitleaks git --redact .`, `npm run check:paths`, `npm run check` (lint, typecheck, unit + integration + e2e tests) and `npm run build`.
 
 ## Agent skills
