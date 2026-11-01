@@ -9,7 +9,7 @@ src/
 │   └── phoenix-tracer.service.ts         # Helper for manual spans (e.g., RAG / DB / external APIs)
 ├── mcp/                                  # Core MCP Infrastructure Module
 │   ├── decorators/                       # Custom metadata decorators
-│   │   ├── mcp-tool.decorator.ts         # @McpTool({ name, description, schema })
+│   │   ├── mcp-tool.decorator.ts         # @McpTool({ name, description, inputSchema, outputSchema, annotations })
 │   │   ├── mcp-resource.decorator.ts     # @McpResource({ uri, name, mimeType })
 │   │   └── mcp-prompt.decorator.ts       # @McpPrompt({ name, description })
 │   ├── transports/                       # Transport adapters
