@@ -9,6 +9,7 @@ Issues and specs for this repo live in Linear. The GitHub remote (`jeremiebardon
 - Use the Linear MCP server (`plugin:engineering:linear`) when available; otherwise ask the user to paste the ticket.
 - Specs go in the description of a parent issue; implementation tickets are child issues of it.
 - Comments and discussion go on the issue as Linear comments.
+- The software factory's queue is the issues in project `Garmin MCP` labeled `factory` (see `CLAUDE.MD`). Its scripts reach Linear through `LINEAR_API_KEY`; its PRs say `Closes JER-<n>`.
 
 ## When a skill says "publish to the issue tracker"
 
