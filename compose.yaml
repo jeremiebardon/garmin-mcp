@@ -1,0 +1,88 @@
+name: garmin-mcp
+
+services:
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    stop_grace_period: 30s
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 2
+    ports:
+      - "127.0.0.1:${MCP_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=postgres://garmin:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/garmin
+      - GARMIN_PERSONAL_API_KEY=${GARMIN_PERSONAL_API_KEY:?set GARMIN_PERSONAL_API_KEY in .env}
+      - GARMIN_BASE_URL=https://personal.connectapi.garmin.com
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://phoenix:6006/v1/traces
+      - PHOENIX_PROJECT_NAME=garmin-mcp
+      - HOST=0.0.0.0
+      - NODE_OPTIONS=--max-old-space-size=768
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      phoenix:
+        condition: service_started
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg18-trixie
+    restart: unless-stopped
+    mem_limit: 1.5g
+    cpus: 2
+    shm_size: 256m
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=garmin
+      - POSTGRES_DB=garmin
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      - PHOENIX_DB_PASSWORD=${PHOENIX_DB_PASSWORD:?set PHOENIX_DB_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U garmin -d garmin"]
+      interval: 5s
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  phoenix:
+    image: arizephoenix/phoenix:version-20.27.0-nonroot
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 1
+    ports:
+      - "127.0.0.1:${PHOENIX_PORT:-6006}:6006"
+    environment:
+      - PHOENIX_SQL_DATABASE_URL=postgresql://phoenix:${PHOENIX_DB_PASSWORD:?set PHOENIX_DB_PASSWORD in .env}@postgres:5432/phoenix
+      - PHOENIX_DEFAULT_RETENTION_POLICY_DAYS=${PHOENIX_RETENTION_DAYS:-30}
+      # Anonymous product telemetry off: PHOENIX_TELEMETRY_ENABLED, from the Phoenix configuration docs (arize.com/docs/phoenix/self-hosting/configuration)
+      - PHOENIX_TELEMETRY_ENABLED=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  pgdata:
+    name: garmin-mcp-pgdata
+    external: true

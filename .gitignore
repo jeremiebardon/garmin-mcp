@@ -82,3 +82,6 @@ books/
 # Local spike output (e.g. the Docling spike; no book text is committed)
 spikes/
 .spikes/
+
+# Database dumps (personal data)
+backups/

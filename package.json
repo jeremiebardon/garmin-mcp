@@ -24,6 +24,9 @@
     "test:local": "vitest run --project local",
     "test:cov": "vitest run --project unit --project integration --project e2e --coverage",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
+    "inspect": "npx @modelcontextprotocol/inspector@2.13.0",
+    "db:backup": "node scripts/db-backup.mjs",
+    "db:restore": "node scripts/db-restore.mjs",
     "check:paths": "node scripts/check-forbidden-paths.mjs",
     "check": "npm run lint && npm run typecheck && npm run test:all -- --update=none"
   },
@@ -51,6 +54,7 @@
     "supertest": "^7.0.0",
     "typescript": "^6.0.2",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.2"
+    "vitest": "^4.1.2",
+    "yaml": "^2.9.1"
   }
 }
