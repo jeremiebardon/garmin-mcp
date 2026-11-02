@@ -25,8 +25,9 @@ in the main checkout; your one file goes there.
    the spec from it, not from the issue alone. When intake rescoped the issue,
    what it left out is out of scope.
 3. `CLAUDE.MD` in the worktree: the project overview, architecture, commands
-   and conventions. Then `GLOSSARY.md` and the ADRs in `docs/adr/` that touch
-   the area this feature lives in (`docs/agents/domain.md` says how).
+   and conventions. Then `GLOSSARY.md`, the ADRs in `docs/adr/` and the spec
+   files in `docs/spec/` that touch the area this feature lives in
+   (`docs/agents/domain.md` says how).
 4. The code the feature touches. Find the real files and components; don't
    guess at names.
 

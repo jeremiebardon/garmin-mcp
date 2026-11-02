@@ -21,8 +21,8 @@ that, scoped so it can land as one small pull request.
    tools or your decision.
 2. Any earlier `<job folder>/intake-*.md`. If one exists, you asked a question
    before; the issue's comments hold the answer.
-3. `CLAUDE.MD` in the repo root, `GLOSSARY.md` and the ADRs in `docs/adr/` that
-   touch the area, and the code the issue would touch, enough to judge scope
+3. `CLAUDE.MD` in the repo root, `GLOSSARY.md`, the ADRs in `docs/adr/` and
+   the spec files in `docs/spec/` that touch the area, and the code the issue would touch, enough to judge scope
    and risk. Use Read, Grep and Glob with paths under the repo root.
 
 ## Decide
