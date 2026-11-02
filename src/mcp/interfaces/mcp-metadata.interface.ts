@@ -9,4 +9,6 @@ export interface McpToolOptions {
   inputSchema: z.ZodObject;
   outputSchema: z.ZodObject;
   annotations?: ToolAnnotations;
+  /** Top-level output field holding the main array, trimmed by the size guard. */
+  mainArray?: string;
 }
