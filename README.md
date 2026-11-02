@@ -1,3 +1,76 @@
+# Garmin MCP
+
+An MCP server over the Athlete's Garmin data, run with Docker Compose (`mcp`, `postgres`, `phoenix`).
+
+## One-time setup
+
+1. Copy `.env.example` to `.env` and fill in the three required values.
+2. Create the external data volume (so `docker compose down -v` cannot delete the Athlete's data):
+
+   ```bash
+   docker volume create garmin-mcp-pgdata
+   ```
+
+3. If the volume was initialised before `docker/postgres-init/10-phoenix.sh` existed, create the Phoenix role and database by hand, once:
+
+   ```bash
+   docker compose exec postgres psql -U garmin -d garmin -v pw="<PHOENIX_DB_PASSWORD>" \
+     -c "CREATE ROLE phoenix LOGIN PASSWORD :'pw'" -c "CREATE DATABASE phoenix OWNER phoenix"
+   ```
+
+   (If your `psql` does not substitute variables with `-c`, pipe the two statements to `psql` on stdin instead.)
+
+## Run
+
+```bash
+docker compose up -d
+docker compose ps   # mcp should become healthy
+```
+
+The Phoenix UI is at http://127.0.0.1:6006.
+
+## Dev workflow
+
+```bash
+docker compose up -d postgres phoenix
+docker compose stop mcp
+npm run start:dev
+```
+
+In `.env`, set `DATABASE_URL=postgres://garmin:<password>@127.0.0.1:5432/garmin` and the trace endpoint `http://127.0.0.1:6006/v1/traces`.
+
+## MCP Inspector
+
+`npm run inspect`, then connect with Streamable HTTP to `http://127.0.0.1:3000/mcp`.
+
+## Claude Code
+
+```bash
+claude mcp add --transport http --scope user garmin http://127.0.0.1:3000/mcp
+```
+
+No `.mcp.json` is committed: every coding session in this public repo would otherwise load the Athlete's real-data tools.
+
+## Claude Desktop
+
+Desktop cannot reach a local HTTP server directly, so it goes through the `mcp-remote` stdio bridge in `claude_desktop_config.json` (needs Node on the host):
+
+```json
+{ "mcpServers": { "garmin": {
+  "command": "npx",
+  "args": ["-y", "mcp-remote@0.15.2", "http://127.0.0.1:3000/mcp", "--transport", "http-only"]
+} } }
+```
+
+## Backups
+
+```bash
+npm run db:backup                              # backups/garmin-<timestamp>.dump and backups/phoenix-<timestamp>.dump
+npm run db:restore -- <garmin|phoenix> <file>
+```
+
+`backups/` is gitignored and holds personal data.
+
 <p align="center">
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>

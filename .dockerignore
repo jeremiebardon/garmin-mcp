@@ -1,0 +1,12 @@
+.env*
+.garmin-samples/
+books/
+.books/
+spikes/
+backups/
+node_modules/
+dist/
+.git/
+*.fit
+*.FIT
+*.zip

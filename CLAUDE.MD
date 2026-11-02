@@ -45,10 +45,15 @@ src/
 ├── app.module.ts
 └── main.ts                               # The only entrypoint: HTTP bootstrap, MCP over Streamable HTTP at POST /mcp
 
+Outside `src/`: `compose.yaml` and `Dockerfile` (the stack and the server image), `docker/postgres-init/` (Postgres first-init scripts), `scripts/db-backup.mjs` and `db-restore.mjs`.
+
 ## Commands
 
 - Fresh checkout: `npm ci`. Tests need no `.env` and no real Garmin data: fixtures are synthetic (ADR 0002).
 - Server: `PORT=<port> npm run start` (3000 by default); `npm run start:dev` watches. It binds to `HOST` (`127.0.0.1` by default). Health: `GET /health/live` (always 200) and `GET /health/ready` (200, or 503 while the readiness gate says not ready).
+- Compose stack: `docker compose up -d` (`compose.yaml`: `mcp`, `postgres`, `phoenix`, ports on 127.0.0.1). Create the external volume once: `docker volume create garmin-mcp-pgdata`. Needs `.env` (see `.env.example`).
+- MCP Inspector: `npm run inspect`, then connect with Streamable HTTP to `http://127.0.0.1:3000/mcp`.
+- Backups: `npm run db:backup` writes `backups/*.dump`; `npm run db:restore -- <garmin|phoenix> <file>` restores.
 - Validation, the same as `factory/checks.sh` and the `ci` workflow: `gitleaks git --redact .`, `npm run check:paths`, `npm run check` (lint, typecheck, unit + integration + e2e tests) and `npm run build`.
 - MCP contract: `test/integration/__snapshots__/mcp-contract.json` is the snapshot of every registered tool. `npm run check` and CI fail instead of writing it; update it on purpose with `npx vitest run --project integration -u test/integration/mcp-contract.int-spec.ts`, then review and commit the diff.
 

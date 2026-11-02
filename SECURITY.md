@@ -8,7 +8,9 @@ This repository holds code, docs and synthetic test fixtures only. The Athlete's
 |---|---|---|
 | Garmin Personal API key | `.env` (local only) | A credential for the Athlete's Garmin account |
 | Real Garmin samples (JSON, FIT ZIPs, `expected.json`) | `.garmin-samples/` (local only) | FIT Files hold full GPS tracks and 1 Hz heart rate |
-| Synced Garmin data (raw JSON, FIT ZIPs, Derived Metrics) | The Postgres volume of the Docker Compose stack | Personal training and Wellness Data |
+| Synced Garmin data (raw JSON, FIT ZIPs, Derived Metrics) | The external Docker volume `garmin-mcp-pgdata` of the Compose stack | Personal training and Wellness Data |
+| `phoenix` database (Phoenix traces, datasets and experiments) | The same Postgres volume | Tool outputs in traces carry the Athlete's data |
+| Database dumps | `backups/` (local only) | `pg_dump` files of the `garmin` and `phoenix` databases |
 | Running Books (PDFs) | `./books` (local only) | Copyrighted material |
 
 The only PDF in the repository is the invented Docling fixture in `docling-sidecar/fixtures/`.
@@ -16,6 +18,7 @@ The only PDF in the repository is the invented Docling fixture in `docling-sidec
 ## Guards
 
 - `.gitignore` excludes `.env`, `.garmin-samples/`, `books/`, `*.fit`, `*.zip` and `*.pdf` (except the Docling fixture).
+- `backups/` is gitignored and excluded from the server image by `.dockerignore`.
 - The `ci` workflow runs [gitleaks](https://github.com/gitleaks/gitleaks) over the full history and a forbidden-path check on `git ls-files` (`npm run check:paths`). It uses no repository secrets.
 - GitHub secret scanning and push protection are on.
 
