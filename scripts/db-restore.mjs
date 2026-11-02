@@ -14,6 +14,7 @@ const child = spawn(
   ['compose', 'exec', '-T', 'postgres', 'pg_restore', '-U', 'garmin', '--clean', '--if-exists', '-d', db],
   { stdio: ['pipe', 'inherit', 'inherit'] },
 );
+child.stdin.on('error', () => {});
 createReadStream(file).pipe(child.stdin);
 child.on('error', (err) => {
   console.error(err.message);

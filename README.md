@@ -14,11 +14,11 @@ An MCP server over the Athlete's Garmin data, run with Docker Compose (`mcp`, `p
 3. If the volume was initialised before `docker/postgres-init/10-phoenix.sh` existed, create the Phoenix role and database by hand, once:
 
    ```bash
-   docker compose exec postgres psql -U garmin -d garmin -v pw="<PHOENIX_DB_PASSWORD>" \
-     -c "CREATE ROLE phoenix LOGIN PASSWORD :'pw'" -c "CREATE DATABASE phoenix OWNER phoenix"
+   docker compose exec -T postgres psql -U garmin -d garmin -v ON_ERROR_STOP=1 -v pw="<PHOENIX_DB_PASSWORD>" <<'SQL'
+   CREATE ROLE phoenix LOGIN PASSWORD :'pw';
+   CREATE DATABASE phoenix OWNER phoenix;
+   SQL
    ```
-
-   (If your `psql` does not substitute variables with `-c`, pipe the two statements to `psql` on stdin instead.)
 
 ## Run
 
