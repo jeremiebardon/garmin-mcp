@@ -30,10 +30,21 @@ src/
 │   └── mcp.module.ts                     # Global or dynamic module (@Global())
 │
 ├── health/                               # Readiness gate + health endpoints
-│   ├── readiness-gate.ts                 # READINESS_GATE token; default always ready
+│   ├── readiness-gate.ts                 # READINESS_GATE token + ReadinessGate interface
+│   ├── startup-readiness-gate.ts         # The gate: starts open; bootstrap closes it until migrations ran
 │   ├── readiness.guard.ts                # 503 on /mcp while the gate is not ready (after the Origin check)
 │   ├── health.controller.ts              # GET /health/live, GET /health/ready
 │   └── health.module.ts
+│
+├── database/                             # Postgres store (ADR 0001)
+│   ├── schema.ts                         # Drizzle schema: pgSchema('garmin'), no tables yet
+│   ├── migrations/                       # drizzle-kit output (`npm run db:generate`), copied to dist/ by nest build
+│   ├── migrate.ts                        # runMigrations(pool), under the 'migrations' advisory lock
+│   └── advisory-lock.ts                  # withAdvisoryLock(pool, name, fn); reused by Sync, CLI, recompute
+│
+├── clock/                                # CLOCK token, SystemClock (the only reader of system time), FixedClock
+├── config/
+│   └── database.config.ts                # readDatabaseUrl(env): DATABASE_URL or 'DATABASE_URL is not set'
 │
 ├── modules/                              # Domain / Feature Modules
 │   ├── example/                          # Example Domain Module
@@ -50,12 +61,16 @@ src/
 │       └── ...
 │
 ├── app.module.ts
+├── bootstrap.ts                          # startServer(): app, gate closed, pg.Pool, listen, then migrate and open the gate
 └── main.ts                               # The only entrypoint: HTTP bootstrap, MCP over Streamable HTTP at POST /mcp
 
 ## Commands
 
 - Fresh checkout: `npm ci`. Tests need no `.env` and no real Garmin data: fixtures are synthetic (ADR 0002).
 - Server: `PORT=<port> npm run start` (3000 by default); `npm run start:dev` watches. It binds to `HOST` (`127.0.0.1` by default). Health: `GET /health/live` (always 200) and `GET /health/ready` (200, or 503 while the readiness gate says not ready).
+- `npm run start` needs `DATABASE_URL` and a reachable Postgres. Until the migrations are applied the server answers 503 on `/health/ready` and `/mcp`; a missing URL or a failed migration exits non-zero.
+- `npm run db:generate` creates a migration from `src/database/schema.ts` (drizzle-kit, `drizzle.config.ts`). Commit its output in `src/database/migrations/`.
+- Integration and e2e tests need Docker: they start Postgres through Testcontainers (`test/support/test-postgres.ts`). Unit tests need neither Docker nor `DATABASE_URL`.
 - Validation, the same as `factory/checks.sh` and the `ci` workflow: `gitleaks git --redact .`, `npm run check:paths`, `npm run check` (lint, typecheck, unit + integration + e2e tests) and `npm run build`.
 - MCP contract: `test/integration/__snapshots__/mcp-contract.json` is the snapshot of every registered tool. `npm run check` and CI fail instead of writing it; update it on purpose with `npx vitest run --project integration -u test/integration/mcp-contract.int-spec.ts`, then review and commit the diff.
 
