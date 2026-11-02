@@ -15,6 +15,13 @@ src/
 │   ├── transports/                       # Transport adapters
 │   │   └── streamable-http.controller.ts # Stateless Streamable HTTP: POST /mcp (GET, DELETE answer 405)
 │   ├── mcp-origin.guard.ts               # Origin check on every /mcp request (loopback origins only, else 403)
+│   ├── envelope/                         # Response envelope toolkit
+│   │   ├── reason-codes.ts               # Closed reason-code list (mirrors docs/spec/mcp-surface.md), ReasonCode type + Zod enum
+│   │   ├── nulls.ts                      # nulls() builder: null fields + sibling {field: reason} map
+│   │   ├── errors.ts                     # DomainMissError, closed error codes, error-result mapping (one place)
+│   │   ├── trace-id.ts                   # TRACE_ID_PROVIDER token + placeholder trace id
+│   │   ├── size-guard.ts                 # 25,000-char guard: trims the mainArray, sets truncated + hint
+│   │   └── index.ts                      # Barrel
 │   ├── services/
 │   │   ├── mcp-server.service.ts         # Wraps @modelcontextprotocol/sdk McpServer
 │   │   └── mcp-registry.service.ts       # Scans providers via DiscoveryService & binds handlers
@@ -65,6 +72,7 @@ src/
 - `npm run db:generate` creates a migration from `src/database/schema.ts` (drizzle-kit, `drizzle.config.ts`). Commit its output in `src/database/migrations/`.
 - Integration and e2e tests need Docker: they start Postgres through Testcontainers (`test/support/test-postgres.ts`). Unit tests need neither Docker nor `DATABASE_URL`.
 - Validation, the same as `factory/checks.sh` and the `ci` workflow: `gitleaks git --redact .`, `npm run check:paths`, `npm run check` (lint, typecheck, unit + integration + e2e tests) and `npm run build`.
+- MCP contract: `test/integration/__snapshots__/mcp-contract.json` is the snapshot of every registered tool. `npm run check` and CI fail instead of writing it; update it on purpose with `npx vitest run --project integration -u test/integration/mcp-contract.int-spec.ts`, then review and commit the diff.
 
 ## Agent skills
 
