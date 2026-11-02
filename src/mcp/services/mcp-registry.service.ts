@@ -1,5 +1,6 @@
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner } from '@nestjs/core';
+import { OutputValidationError } from '../envelope/index.js';
 import {
   MCP_TOOL_METADATA,
   type McpToolOptions,
@@ -48,9 +49,7 @@ export class McpRegistryService implements OnModuleInit {
             const output = await method(input);
             const parsed = options.outputSchema.safeParse(output);
             if (!parsed.success) {
-              throw new Error(
-                `Output validation error: Invalid output for tool ${options.name}: ${parsed.error.message}`,
-              );
+              throw new OutputValidationError(options.name, parsed.error);
             }
             return output;
           },

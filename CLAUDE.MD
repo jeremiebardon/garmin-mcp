@@ -15,6 +15,13 @@ src/
 │   ├── transports/                       # Transport adapters
 │   │   └── streamable-http.controller.ts # Stateless Streamable HTTP: POST /mcp (GET, DELETE answer 405)
 │   ├── mcp-origin.guard.ts               # Origin check on every /mcp request (loopback origins only, else 403)
+│   ├── envelope/                         # Response envelope toolkit
+│   │   ├── reason-codes.ts               # Closed reason-code list (mirrors docs/spec/mcp-surface.md), ReasonCode type + Zod enum
+│   │   ├── nulls.ts                      # nulls() builder: null fields + sibling {field: reason} map
+│   │   ├── errors.ts                     # DomainMissError, closed error codes, error-result mapping (one place)
+│   │   ├── trace-id.ts                   # TRACE_ID_PROVIDER token + placeholder trace id
+│   │   ├── size-guard.ts                 # 25,000-char guard: trims the mainArray, sets truncated + hint
+│   │   └── index.ts                      # Barrel
 │   ├── services/
 │   │   ├── mcp-server.service.ts         # Wraps @modelcontextprotocol/sdk McpServer
 │   │   └── mcp-registry.service.ts       # Scans providers via DiscoveryService & binds handlers

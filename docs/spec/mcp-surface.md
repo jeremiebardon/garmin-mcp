@@ -43,7 +43,7 @@ Every Athlete-data tool returns it at the top level:
 
 ## Reason codes
 
-The `nulls` reason codes are a closed list. Adding one is a spec change.
+The `nulls` reason codes are a closed list. Adding one is a spec change. The enum in `src/mcp/envelope/` mirrors this table: the two must change together.
 
 | Code | Meaning |
 |---|---|
@@ -96,7 +96,7 @@ Domain-miss codes: `activity_not_found` (also for soft-deleted ids) and `race_no
 
 ## Size guard
 
-A response whose JSON is over 25,000 characters has its main array cut until it fits, and gains `truncated: true` and a `hint` (how to narrow the request). The guard is a safety net: no tool should reach it by design.
+A response whose JSON is over 25,000 characters has its main array cut until it fits, and gains `truncated: true` and a `hint` (how to narrow the request). The guard is a safety net: no tool should reach it by design. It measures the compact JSON of `structuredContent`. Each tool names its main array with `mainArray` in `@McpTool`. A tool with no main array, or one still over the limit with that array empty, gets `internal_error`.
 
 ## Annotations
 

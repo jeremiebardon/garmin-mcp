@@ -1,5 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import {
+  TRACE_ID_PROVIDER,
+  applySizeGuard,
+  toErrorResult,
+  type TraceIdProvider,
+} from '../envelope/index.js';
 import { McpRegistryService } from './mcp-registry.service.js';
 
 const INSTRUCTIONS = [
@@ -12,7 +18,10 @@ const INSTRUCTIONS = [
 
 @Injectable()
 export class McpServerService {
-  constructor(private readonly registry: McpRegistryService) {}
+  constructor(
+    private readonly registry: McpRegistryService,
+    @Inject(TRACE_ID_PROVIDER) private readonly traceIds: TraceIdProvider,
+  ) {}
 
   create(): McpServer {
     const server = new McpServer(
@@ -29,13 +38,25 @@ export class McpServerService {
           annotations: options.annotations,
         },
         async (input) => {
-          const structuredContent = await handler(input);
-          return {
-            structuredContent,
-            content: [
-              { type: 'text', text: JSON.stringify(structuredContent) },
-            ],
-          };
+          try {
+            const output = await handler(input);
+            const { content: structuredContent } = applySizeGuard(
+              output,
+              options,
+            );
+            return {
+              structuredContent,
+              content: [
+                { type: 'text', text: JSON.stringify(structuredContent) },
+              ],
+            };
+          } catch (error) {
+            return toErrorResult(
+              options.name,
+              error,
+              this.traceIds.getTraceId(),
+            );
+          }
         },
       );
     }
